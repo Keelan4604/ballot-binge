@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:cloudflare": "npx @opennextjs/cloudflare@latest build",
+    "build:cloudflare": "node_modules/.bin/opennextjs-cloudflare build",
     "start": "next start",
     "lint": "eslint",
     "db:migrate": "npx prisma migrate dev",
