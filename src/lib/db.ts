@@ -5,17 +5,16 @@ const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 function createPrismaClient(): PrismaClient {
   const connectionString = process.env.DATABASE_URL;
 
-  // Use Neon HTTP adapter in production (Cloudflare edge)
   if (connectionString && connectionString.startsWith("postgres")) {
-    // Dynamic import to avoid build-time errors
-    const { neon } = require("@neondatabase/serverless");
+    const { Pool, neonConfig } = require("@neondatabase/serverless");
     const { PrismaNeon } = require("@prisma/adapter-neon");
-    const sql = neon(connectionString);
-    const adapter = new PrismaNeon(sql);
+    const ws = require("ws");
+    neonConfig.webSocketConstructor = ws;
+    const pool = new Pool({ connectionString });
+    const adapter = new PrismaNeon(pool);
     return new PrismaClient({ adapter } as any);
   }
 
-  // Local dev: standard Prisma client (SQLite via DATABASE_URL)
   return new PrismaClient();
 }
 
