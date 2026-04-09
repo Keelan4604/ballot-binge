@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { SwipeDeck } from "@/components/SwipeDeck";
+import { BottomTabs } from "@/components/BottomTabs";
 import { useSwipeStore } from "@/store/swipeStore";
 import { motion } from "framer-motion";
 
@@ -57,10 +58,12 @@ export default function SwipePage() {
         <div className="w-5" />
       </header>
 
-      {/* Swipe deck — no progress bar */}
+      {/* Swipe deck */}
       <div className="flex-1 min-h-0">
         <SwipeDeck />
       </div>
+
+      <BottomTabs />
     </div>
   );
 }
