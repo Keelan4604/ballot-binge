@@ -87,7 +87,11 @@ export function SwipeCard({ item, onSwipe, isTop }: SwipeCardProps) {
       style={{ x, rotate, opacity, touchAction: "none" }}
       drag={isTop ? "x" : false}
       dragConstraints={{ left: 0, right: 0 }}
+      dragDirectionLock
       dragElastic={0.8}
+      onDirectionLock={(axis) => {
+        if (axis === "x") setIsDragging(true);
+      }}
       onDragStart={() => setIsDragging(true)}
       onDragEnd={handleDragEnd}
       whileTap={{ cursor: "grabbing" }}
