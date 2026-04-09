@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import type { SwipeItem, CandidateData, BallotMeasureData } from "@/lib/types";
 
 export async function GET() {
+  try {
   const [candidates, measures] = await Promise.all([
     prisma.candidate.findMany({
       include: {
@@ -94,6 +95,13 @@ export async function GET() {
   );
 
   return NextResponse.json(interleaved);
+  } catch (error: any) {
+    console.error("API /api/items error:", error);
+    return NextResponse.json(
+      { error: error?.message || "Unknown error", stack: error?.stack },
+      { status: 500 }
+    );
+  }
 }
 
 function interleave<T>(a: T[], b: T[]): T[] {

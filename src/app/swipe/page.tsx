@@ -14,8 +14,11 @@ export default function SwipePage() {
     fetch("/api/items")
       .then((res) => res.json())
       .then((data) => {
-        if (data.length > 0) setItems(data);
-      });
+        console.log("API response:", data);
+        if (Array.isArray(data) && data.length > 0) setItems(data);
+        else console.error("No items or error:", data);
+      })
+      .catch((err) => console.error("Fetch failed:", err));
   }, [setItems]);
 
   useEffect(() => {
