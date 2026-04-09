@@ -136,11 +136,11 @@ export function SwipeCard({ item, onSwipe, isTop }: SwipeCardProps) {
           >
             {/* Image / Banner */}
             {isCandidate && item.data.imageUrl ? (
-              <div className="relative h-72 shrink-0 overflow-hidden bg-slate-200">
+              <div className="relative shrink-0 bg-slate-200">
                 <img
                   src={item.data.imageUrl}
                   alt={item.data.name}
-                  className="w-full h-full object-cover object-center"
+                  className="w-full"
                   loading="eager"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
