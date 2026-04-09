@@ -142,7 +142,7 @@ export function SwipeCard({ item, onSwipe, isTop }: SwipeCardProps) {
                 <img
                   src={item.data.imageUrl}
                   alt={item.data.name}
-                  className="w-full h-full object-cover object-top"
+                  className="w-full h-full object-cover object-center"
                   loading="eager"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
@@ -251,7 +251,6 @@ export function SwipeCard({ item, onSwipe, isTop }: SwipeCardProps) {
 
             <div
               className="flex-1 overflow-y-auto px-5 pt-4 pb-3"
-              onClick={(e) => e.stopPropagation()}
             >
               {/* Back header */}
               <div className="flex items-center gap-2 mb-2">
@@ -289,11 +288,8 @@ export function SwipeCard({ item, onSwipe, isTop }: SwipeCardProps) {
               )}
             </div>
 
-            <div
-              className="px-5 pb-3 pt-1 text-center shrink-0 border-t border-slate-100 cursor-pointer"
-              onClick={handleTap}
-            >
-              <span className="text-[11px] text-slate-400">Tap to flip back</span>
+            <div className="px-5 pb-3 pt-1 text-center shrink-0 border-t border-slate-100">
+              <span className="text-[11px] text-slate-400">Tap anywhere to flip back</span>
             </div>
           </div>
         </motion.div>
