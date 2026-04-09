@@ -56,7 +56,6 @@ export function SwipeCard({ item, onSwipe, isTop }: SwipeCardProps) {
   const noOpacity = useTransform(x, [-80, 0], [1, 0]);
   const [isDragging, setIsDragging] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
-  const [showMore, setShowMore] = useState(false);
 
   const isCandidate = item.type === "candidate";
 
@@ -72,7 +71,6 @@ export function SwipeCard({ item, onSwipe, isTop }: SwipeCardProps) {
   function handleTap() {
     if (!isDragging) {
       setIsFlipped(!isFlipped);
-      if (isFlipped) setShowMore(false);
     }
   }
 
@@ -267,25 +265,11 @@ export function SwipeCard({ item, onSwipe, isTop }: SwipeCardProps) {
               <p className="text-xs text-slate-500 mb-3">{subtitle}</p>
 
               {item.type === "candidate" ? (
-                <CandidateBack data={item.data} showMore={showMore} />
+                <CandidateBack data={item.data} />
               ) : (
-                <MeasureBack data={item.data} showMore={showMore} />
+                <MeasureBack data={item.data} />
               )}
 
-              {!showMore && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowMore(true);
-                  }}
-                  className="w-full py-2.5 mt-3 text-sm font-semibold text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-colors flex items-center justify-center gap-1"
-                >
-                  See more
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M6 9l6 6 6-6" />
-                  </svg>
-                </button>
-              )}
             </div>
 
             <div className="px-5 pb-3 pt-1 text-center shrink-0 border-t border-slate-100">
@@ -300,8 +284,8 @@ export function SwipeCard({ item, onSwipe, isTop }: SwipeCardProps) {
 
 /* ---------- Back-of-card sub-components ---------- */
 
-function CandidateBack({ data, showMore }: { data: CandidateData; showMore: boolean }) {
-  const stances = showMore ? data.stances : data.stances.slice(0, 3);
+function CandidateBack({ data }: { data: CandidateData }) {
+  const stances = data.stances;
   return (
     <>
       <div className="mb-3">
@@ -328,7 +312,7 @@ function CandidateBack({ data, showMore }: { data: CandidateData; showMore: bool
         </div>
       )}
 
-      {showMore && data.topics.length > 0 && (
+      {data.topics.length > 0 && (
         <div className="mb-3">
           <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Topics</h3>
           <div className="flex flex-wrap gap-1.5">
@@ -341,7 +325,7 @@ function CandidateBack({ data, showMore }: { data: CandidateData; showMore: bool
         </div>
       )}
 
-      {showMore && data.websiteUrl && (
+      {data.websiteUrl && (
         <a
           href={data.websiteUrl}
           target="_blank"
@@ -356,7 +340,7 @@ function CandidateBack({ data, showMore }: { data: CandidateData; showMore: bool
   );
 }
 
-function MeasureBack({ data, showMore }: { data: BallotMeasureData; showMore: boolean }) {
+function MeasureBack({ data }: { data: BallotMeasureData }) {
   return (
     <>
       <div className="mb-3">
@@ -384,7 +368,7 @@ function MeasureBack({ data, showMore }: { data: BallotMeasureData; showMore: bo
         </div>
       )}
 
-      {showMore && data.proArguments && data.proArguments.length > 0 && (
+      {data.proArguments && data.proArguments.length > 0 && (
         <div className="mb-3">
           <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Arguments</h3>
           <div className="space-y-2">
@@ -416,7 +400,7 @@ function MeasureBack({ data, showMore }: { data: BallotMeasureData; showMore: bo
         </div>
       )}
 
-      {showMore && data.topics.length > 0 && (
+      {data.topics.length > 0 && (
         <div className="mb-3">
           <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Topics</h3>
           <div className="flex flex-wrap gap-1.5">
