@@ -14,7 +14,6 @@ export default function SwipePage() {
     fetch("/api/items")
       .then((res) => res.json())
       .then((data) => {
-        console.log("API response:", data);
         if (Array.isArray(data) && data.length > 0) setItems(data);
         else console.error("No items or error:", data);
       })
@@ -58,7 +57,7 @@ export default function SwipePage() {
         <div className="w-5" />
       </header>
 
-      {/* Swipe deck */}
+      {/* Swipe deck — no progress bar */}
       <div className="flex-1 min-h-0">
         <SwipeDeck />
       </div>

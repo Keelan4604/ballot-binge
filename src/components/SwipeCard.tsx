@@ -1,25 +1,62 @@
 "use client";
 
 import { motion, useMotionValue, useTransform, type PanInfo } from "framer-motion";
-import type { SwipeItem } from "@/lib/types";
+import type { SwipeItem, CandidateData, BallotMeasureData } from "@/lib/types";
 import { useState } from "react";
 
 interface SwipeCardProps {
   item: SwipeItem;
   onSwipe: (direction: "left" | "right") => void;
-  onExpand: () => void;
   isTop: boolean;
 }
 
 const SWIPE_THRESHOLD = 100;
 
-export function SwipeCard({ item, onSwipe, onExpand, isTop }: SwipeCardProps) {
+function getCategoryGradient(category?: string): string {
+  const gradients: Record<string, string> = {
+    Housing: "from-sky-400 to-blue-600",
+    Environment: "from-emerald-400 to-green-600",
+    Education: "from-violet-400 to-purple-600",
+    "Public Safety": "from-rose-400 to-red-600",
+    Technology: "from-cyan-400 to-teal-600",
+    Immigration: "from-orange-400 to-amber-600",
+    Transportation: "from-indigo-400 to-blue-600",
+    Healthcare: "from-pink-400 to-rose-600",
+    Economy: "from-yellow-400 to-amber-600",
+    Energy: "from-lime-400 to-green-600",
+    "Gun Policy": "from-slate-400 to-gray-600",
+    "National Security": "from-blue-400 to-indigo-600",
+  };
+  return gradients[category || ""] || "from-slate-400 to-gray-600";
+}
+
+function getCategoryEmoji(category?: string): string {
+  const emojis: Record<string, string> = {
+    Housing: "🏠",
+    Environment: "🌿",
+    Education: "📚",
+    "Public Safety": "🛡️",
+    Technology: "💻",
+    Immigration: "🌎",
+    Transportation: "🚆",
+    Healthcare: "🏥",
+    Economy: "💼",
+    Energy: "⚡",
+    "Gun Policy": "🎯",
+    "National Security": "🦅",
+  };
+  return emojis[category || ""] || "📋";
+}
+
+export function SwipeCard({ item, onSwipe, isTop }: SwipeCardProps) {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-300, 0, 300], [-15, 0, 15]);
   const opacity = useTransform(x, [-300, -100, 0, 100, 300], [0.5, 1, 1, 1, 0.5]);
   const yesOpacity = useTransform(x, [0, 80], [0, 1]);
   const noOpacity = useTransform(x, [-80, 0], [1, 0]);
   const [isDragging, setIsDragging] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [showMore, setShowMore] = useState(false);
 
   const isCandidate = item.type === "candidate";
 
@@ -32,12 +69,19 @@ export function SwipeCard({ item, onSwipe, onExpand, isTop }: SwipeCardProps) {
     }
   }
 
-  const topics = item.data.topics.slice(0, 3);
+  function handleTap() {
+    if (!isDragging) {
+      setIsFlipped(!isFlipped);
+      if (isFlipped) setShowMore(false);
+    }
+  }
+
   const title = isCandidate ? item.data.name : item.data.title;
   const subtitle = isCandidate
     ? `${item.data.office} · ${item.data.jurisdiction.name}`
     : `${item.data.jurisdiction.name}${item.type === "measure" && item.data.category ? ` · ${item.data.category}` : ""}`;
   const badge = isCandidate ? item.data.party : item.type === "measure" ? item.data.measureCode : undefined;
+  const topics = item.data.topics.slice(0, 3);
 
   return (
     <motion.div
@@ -57,7 +101,7 @@ export function SwipeCard({ item, onSwipe, onExpand, isTop }: SwipeCardProps) {
         transition: { duration: 0.3 },
       }}
     >
-      {/* Swipe indicator overlays */}
+      {/* Swipe overlays */}
       <motion.div
         className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-emerald-500/20 pointer-events-none"
         style={{ opacity: yesOpacity }}
@@ -75,80 +119,319 @@ export function SwipeCard({ item, onSwipe, onExpand, isTop }: SwipeCardProps) {
         </div>
       </motion.div>
 
-      {/* Card content */}
+      {/* 3D flip container */}
       <div
-        className="h-full w-full rounded-2xl bg-white shadow-xl border border-slate-100 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing select-none"
-        onClick={() => { if (!isDragging) onExpand(); }}
+        className="h-full w-full select-none cursor-grab active:cursor-grabbing"
+        style={{ perspective: 1200 }}
+        onClick={handleTap}
       >
-        {/* Header accent */}
-        <div className={`h-2 w-full ${isCandidate ? "bg-gradient-to-r from-indigo-500 to-violet-500" : "bg-gradient-to-r from-amber-400 to-orange-500"}`} />
+        <motion.div
+          className="h-full w-full relative"
+          style={{ transformStyle: "preserve-3d" }}
+          animate={{ rotateY: isFlipped ? 180 : 0 }}
+          transition={{ duration: 0.5, type: "spring", stiffness: 260, damping: 30 }}
+        >
+          {/* ===== FRONT FACE ===== */}
+          <div
+            className="absolute inset-0 rounded-2xl bg-white shadow-xl border border-slate-100 overflow-hidden flex flex-col"
+            style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
+          >
+            {/* Image / Banner */}
+            {isCandidate && item.data.imageUrl ? (
+              <div className="relative h-44 shrink-0 overflow-hidden bg-slate-200">
+                <img
+                  src={item.data.imageUrl}
+                  alt={item.data.name}
+                  className="w-full h-full object-cover object-top"
+                  loading="eager"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                <div className="absolute bottom-3 left-4">
+                  <span
+                    className={`text-xs font-bold uppercase px-2.5 py-1 rounded-full ${
+                      item.data.party === "Democratic"
+                        ? "bg-blue-600/90 text-white"
+                        : item.data.party === "Republican"
+                        ? "bg-red-600/90 text-white"
+                        : "bg-purple-600/90 text-white"
+                    }`}
+                  >
+                    {item.data.party || "Independent"}
+                  </span>
+                </div>
+              </div>
+            ) : isCandidate ? (
+              <div className="h-2 w-full bg-gradient-to-r from-indigo-500 to-violet-500 shrink-0" />
+            ) : (
+              <div
+                className={`relative h-32 shrink-0 bg-gradient-to-br ${getCategoryGradient(
+                  item.data.category
+                )} flex items-center justify-center`}
+              >
+                <span className="text-6xl opacity-90">{getCategoryEmoji(item.data.category)}</span>
+                {item.type === "measure" && item.data.measureCode && (
+                  <span className="absolute top-3 right-3 text-xs font-bold text-white/90 bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-full">
+                    {item.data.measureCode}
+                  </span>
+                )}
+              </div>
+            )}
 
-        {/* Type badge */}
-        <div className="px-5 pt-4 pb-2 flex items-center gap-2">
-          <span className={`text-xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full ${isCandidate ? "bg-indigo-50 text-indigo-600" : "bg-amber-50 text-amber-700"}`}>
-            {isCandidate ? "Candidate" : "Measure"}
-          </span>
-          {badge && <span className="text-xs font-medium text-slate-400">{badge}</span>}
-        </div>
+            <div className="flex-1 flex flex-col min-h-0 px-5 pt-3 pb-3">
+              <h2 className="text-xl font-bold text-slate-900 leading-tight">{title}</h2>
+              <p className="text-sm text-slate-500 mt-0.5">{subtitle}</p>
 
-        {/* Title */}
-        <div className="px-5 pb-2">
-          <h2 className="text-2xl font-bold text-slate-900 leading-tight">{title}</h2>
-          <p className="text-sm text-slate-500 mt-1">{subtitle}</p>
-        </div>
+              <p className="text-sm text-slate-700 leading-relaxed mt-2 line-clamp-3">
+                {item.data.shortSummary}
+              </p>
 
-        {/* Summary */}
-        <div className="px-5 pb-4 flex-1">
-          <p className="text-base text-slate-700 leading-relaxed">{item.data.shortSummary}</p>
-
-          {/* Yes/No framing for measures */}
-          {item.type === "measure" && (item.data.yesMeans || item.data.noMeans) && (
-            <div className="mt-4 space-y-2">
-              {item.data.yesMeans && (
-                <div className="flex items-start gap-2">
-                  <span className="shrink-0 mt-0.5 w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-bold">Y</span>
-                  <p className="text-sm text-slate-600">{item.data.yesMeans}</p>
+              {/* Quick stances or yes/no for measures */}
+              {item.type === "candidate" && item.data.stances.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {item.data.stances.slice(0, 2).map((s) => (
+                    <div key={s.id} className="flex items-start gap-1.5">
+                      <span className="shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                      <p className="text-xs text-slate-600">
+                        <span className="font-semibold text-slate-700">{s.topic}:</span> {s.position}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               )}
-              {item.data.noMeans && (
-                <div className="flex items-start gap-2">
-                  <span className="shrink-0 mt-0.5 w-5 h-5 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-xs font-bold">N</span>
-                  <p className="text-sm text-slate-600">{item.data.noMeans}</p>
+              {item.type === "measure" && (item.data.yesMeans || item.data.noMeans) && (
+                <div className="mt-2 space-y-1.5">
+                  {item.data.yesMeans && (
+                    <div className="flex items-start gap-1.5">
+                      <span className="shrink-0 mt-0.5 w-4 h-4 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px] font-bold">Y</span>
+                      <p className="text-xs text-slate-600 line-clamp-2">{item.data.yesMeans}</p>
+                    </div>
+                  )}
+                  {item.data.noMeans && (
+                    <div className="flex items-start gap-1.5">
+                      <span className="shrink-0 mt-0.5 w-4 h-4 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-[10px] font-bold">N</span>
+                      <p className="text-xs text-slate-600 line-clamp-2">{item.data.noMeans}</p>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          )}
 
-          {/* Stances for candidates */}
-          {item.type === "candidate" && item.data.stances.length > 0 && (
-            <div className="mt-4 space-y-2">
-              {item.data.stances.slice(0, 2).map((stance) => (
-                <div key={stance.id} className="flex items-start gap-2">
-                  <span className="shrink-0 mt-0.5 w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                  <p className="text-sm text-slate-600">
-                    <span className="font-medium text-slate-700">{stance.topic}:</span> {stance.summary}
-                  </p>
+              <div className="mt-auto" />
+
+              {topics.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {topics.map((t) => (
+                    <span
+                      key={t.id}
+                      className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 font-medium"
+                    >
+                      {t.icon && `${t.icon} `}
+                      {t.name}
+                    </span>
+                  ))}
                 </div>
-              ))}
+              )}
+              <p className="text-[11px] text-slate-400 text-center mt-2">Tap to flip</p>
             </div>
-          )}
-        </div>
+          </div>
 
-        {/* Topics */}
-        {topics.length > 0 && (
-          <div className="px-5 pb-4 flex flex-wrap gap-1.5">
-            {topics.map((topic) => (
-              <span key={topic.id} className="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 font-medium">
-                {topic.icon && `${topic.icon} `}{topic.name}
+          {/* ===== BACK FACE ===== */}
+          <div
+            className="absolute inset-0 rounded-2xl bg-white shadow-xl border border-slate-100 overflow-hidden flex flex-col"
+            style={{
+              backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
+              transform: "rotateY(180deg)",
+            }}
+          >
+            <div
+              className={`h-2 w-full shrink-0 bg-gradient-to-r ${
+                isCandidate ? "from-indigo-500 to-violet-500" : "from-amber-400 to-orange-500"
+              }`}
+            />
+
+            <div
+              className="flex-1 overflow-y-auto px-5 pt-4 pb-3"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Back header */}
+              <div className="flex items-center gap-2 mb-2">
+                <span
+                  className={`text-xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full ${
+                    isCandidate ? "bg-indigo-50 text-indigo-600" : "bg-amber-50 text-amber-700"
+                  }`}
+                >
+                  {isCandidate ? "Candidate" : "Measure"}
+                </span>
+                {badge && <span className="text-xs font-medium text-slate-400">{badge}</span>}
+              </div>
+              <h2 className="text-lg font-bold text-slate-900 mb-0.5">{title}</h2>
+              <p className="text-xs text-slate-500 mb-3">{subtitle}</p>
+
+              {item.type === "candidate" ? (
+                <CandidateBack data={item.data} showMore={showMore} />
+              ) : (
+                <MeasureBack data={item.data} showMore={showMore} />
+              )}
+
+              {!showMore && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMore(true);
+                  }}
+                  className="w-full py-2.5 mt-3 text-sm font-semibold text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-colors flex items-center justify-center gap-1"
+                >
+                  See more
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </button>
+              )}
+            </div>
+
+            <div
+              className="px-5 pb-3 pt-1 text-center shrink-0 border-t border-slate-100 cursor-pointer"
+              onClick={handleTap}
+            >
+              <span className="text-[11px] text-slate-400">Tap to flip back</span>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ---------- Back-of-card sub-components ---------- */
+
+function CandidateBack({ data, showMore }: { data: CandidateData; showMore: boolean }) {
+  const stances = showMore ? data.stances : data.stances.slice(0, 3);
+  return (
+    <>
+      <div className="mb-3">
+        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">About</h3>
+        <p className="text-sm text-slate-700 leading-relaxed">
+          {data.longSummary || data.shortSummary}
+        </p>
+      </div>
+
+      {stances.length > 0 && (
+        <div className="mb-3">
+          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+            Key Positions
+          </h3>
+          <div className="space-y-2">
+            {stances.map((s) => (
+              <div key={s.id} className="p-2.5 rounded-lg bg-slate-50">
+                <p className="text-[11px] font-semibold text-indigo-600 mb-0.5">{s.topic}</p>
+                <p className="text-xs font-medium text-slate-800">{s.position}</p>
+                <p className="text-xs text-slate-600 mt-0.5">{s.summary}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {showMore && data.topics.length > 0 && (
+        <div className="mb-3">
+          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Topics</h3>
+          <div className="flex flex-wrap gap-1.5">
+            {data.topics.map((t) => (
+              <span key={t.id} className="text-[11px] px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-medium">
+                {t.icon && `${t.icon} `}{t.name}
               </span>
             ))}
           </div>
-        )}
-
-        <div className="px-5 pb-4 flex items-center justify-center">
-          <span className="text-xs text-slate-400">Tap for details</span>
         </div>
+      )}
+
+      {showMore && data.websiteUrl && (
+        <a
+          href={data.websiteUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="block w-full py-2 mt-1 text-sm font-medium text-center text-white bg-slate-800 rounded-xl hover:bg-slate-700 transition-colors"
+        >
+          Visit website
+        </a>
+      )}
+    </>
+  );
+}
+
+function MeasureBack({ data, showMore }: { data: BallotMeasureData; showMore: boolean }) {
+  return (
+    <>
+      <div className="mb-3">
+        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Full Summary</h3>
+        <p className="text-sm text-slate-700 leading-relaxed">
+          {data.longSummary || data.shortSummary}
+        </p>
       </div>
-    </motion.div>
+
+      {(data.yesMeans || data.noMeans) && (
+        <div className="mb-3 space-y-2">
+          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">What your vote means</h3>
+          {data.yesMeans && (
+            <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-100">
+              <p className="text-[11px] font-semibold text-emerald-700 mb-0.5">A &ldquo;Yes&rdquo; vote means:</p>
+              <p className="text-xs text-emerald-800">{data.yesMeans}</p>
+            </div>
+          )}
+          {data.noMeans && (
+            <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-100">
+              <p className="text-[11px] font-semibold text-rose-700 mb-0.5">A &ldquo;No&rdquo; vote means:</p>
+              <p className="text-xs text-rose-800">{data.noMeans}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {showMore && data.proArguments && data.proArguments.length > 0 && (
+        <div className="mb-3">
+          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Arguments</h3>
+          <div className="space-y-2">
+            <div className="p-2.5 rounded-lg bg-slate-50">
+              <p className="text-[11px] font-semibold text-emerald-600 mb-1">In favor</p>
+              <ul className="space-y-1">
+                {data.proArguments.map((arg, i) => (
+                  <li key={i} className="text-xs text-slate-700 flex items-start gap-1.5">
+                    <span className="shrink-0 mt-1 w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    {arg}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {data.conArguments && data.conArguments.length > 0 && (
+              <div className="p-2.5 rounded-lg bg-slate-50">
+                <p className="text-[11px] font-semibold text-rose-600 mb-1">Against</p>
+                <ul className="space-y-1">
+                  {data.conArguments.map((arg, i) => (
+                    <li key={i} className="text-xs text-slate-700 flex items-start gap-1.5">
+                      <span className="shrink-0 mt-1 w-1.5 h-1.5 rounded-full bg-rose-400" />
+                      {arg}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showMore && data.topics.length > 0 && (
+        <div className="mb-3">
+          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Topics</h3>
+          <div className="flex flex-wrap gap-1.5">
+            {data.topics.map((t) => (
+              <span key={t.id} className="text-[11px] px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-medium">
+                {t.icon && `${t.icon} `}{t.name}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
