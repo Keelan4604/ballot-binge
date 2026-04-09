@@ -43,7 +43,7 @@ export default function SwipePage() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="flex flex-col h-screen bg-gradient-to-b from-slate-50 to-white overflow-hidden">
       {/* Header */}
       <header className="flex items-center justify-between px-5 py-3 shrink-0">
         <button

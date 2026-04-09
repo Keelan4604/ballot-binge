@@ -27,8 +27,8 @@ export function SwipeDeck() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 relative px-4 py-4 min-h-0">
-        <div className="relative w-full h-full max-w-md mx-auto" style={{ maxHeight: "75vh" }}>
+      <div className="flex-1 relative px-4 py-4 min-h-0 overflow-hidden">
+        <div className="relative w-full h-full max-w-md mx-auto" style={{ maxHeight: "75vh", touchAction: "none" }}>
           <AnimatePresence mode="popLayout">
             {nextItem && (
               <SwipeCard

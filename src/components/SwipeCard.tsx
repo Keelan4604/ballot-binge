@@ -84,7 +84,7 @@ export function SwipeCard({ item, onSwipe, isTop }: SwipeCardProps) {
   return (
     <motion.div
       className={`absolute inset-0 ${isTop ? "z-10" : "z-0"}`}
-      style={{ x, rotate, opacity }}
+      style={{ x, rotate, opacity, touchAction: "none" }}
       drag={isTop ? "x" : false}
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.8}
